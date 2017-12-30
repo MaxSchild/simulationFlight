@@ -46,20 +46,16 @@ while t < duration:
 	i3 = 0#float(input("Set current3"))
 	i = numpy.array([i1, i2, i3])
 	#getM
-	#m1, m2, m3 = PHY.getDipolemoment(i1, i2, i3, attitude)
 	m = PHY.getDipolemoment(i, attitude)
 
 	#getB 
-	#b1, b2, b3 = PHY.mFluxDensity(position.pX, position.pY, position.pZ)
 	b = PHY.mFluxDensity(position.pos)
 
 	#getTorque
-	#t1, t2, t3 = PHY.getTorque(b1, b2, b3, m1, m2, m3)
 	to = PHY.getTorque(b, m)
 
 	#ausgeben
 
-	#print("Torque", t1, t2, t3)
 	#increase t
 	t += (1 * dt)
 
@@ -69,13 +65,10 @@ while t < duration:
 
 	#calculate new angular velocity (use)
 	I = 1
-	#angularVelocity.addTorque(t1, t2, t3, I, dt)
 	angularVelocity.addTorque(to, I, dt)
 
 	#calculate new attitude
-	#print("angularVelocity", angularVelocity.avX, angularVelocity.avY, angularVelocity.avZ, dt)
 	print("angularVelocity", angularVelocity.av, dt)
-	#attitude.newAttitude(angularVelocity.avX, angularVelocity.avY, angularVelocity.avZ, dt)
 	attitude.newAttitude(angularVelocity.av, dt)
 
 
