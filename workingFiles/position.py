@@ -23,7 +23,7 @@ class Position(object):
 		#mass of the earth
 		mEarth = 5.972 * 10**24 #kilogramm
 		print("mEarth:", mEarth)
-		self.omega = math.sqrt(gamma * mEarth / self.pX ** 3)
+		self.omega = math.sqrt(gamma * mEarth / self.pX) / self.pX  # maybe wrong formula 0.0009
 		print("omega:", self.omega)
 	def __str__(self):
 		return "pX: " + str(self.pX) + "   " + "pY: " + str(self.pY) + "   " + "pZ: " + str(self.pZ)

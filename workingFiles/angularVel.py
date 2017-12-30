@@ -1,5 +1,5 @@
 # vWinkel
-class angularVel(object):
+class AngularVel(object):
 	def __init__(self, avX, avY, avZ):
 		self.avX = avX
 		self.avY = avY
