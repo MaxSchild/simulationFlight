@@ -21,9 +21,9 @@ class Attitude(object):
 		return phi
 		
 	def rotateVec(self, av, vec, dt):
-		angle = numpy.linalg.norm(av) * dt
-		#normating vector from angularVelocity
 		length = numpy.linalg.norm(av)
+		angle = length * dt
+		#normalize vector from angularVelocity
 		axis = av / length
 
 		#crossproduct of axis and vec
