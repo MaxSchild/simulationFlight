@@ -1,46 +1,25 @@
 #main program
 import math
-import numpy
+import numpy as np
 from position import Position 
 from attitude import Attitude
 from angularVel import AngularVel
+from animation import Animation
 import physics as PHY
+import control as CONTROL
+import fakeSensors as SENSORS
+import const as C
 import time
-
-
 from vpython import *
 
-'''
-IMPORTANT
-numpy arrays / vectors: normal coord. system (z axis up)
-output vectors: vpython cord. system (y axis up)
-**numpToVec transforms the vectors accordingly**
-'''
 
-def numpToVec(a):
-	return vec(a[1], a[2], a[0])
 
-CUBE_SIZE = 1000000
-
-#set conditions (position, angular velocity, attitude, delta t, duration)
-height = 400000#int(input("Set x-coordinate of the position in metres(this will be the height)"))
-
-inclination = 0.5 *math.pi / 2#float(input("Set the inclination in radians"))
-dt = 1 #float(input("Set the time intervals"))
-t = 0 #float(input("Set t0 (how many times dt should pass to start)"))
-duration = (10000 + t) *dt #(int(input("how many times should calculations be made?")) + t) *dt
-#setting the objects
-position = Position(height, inclination)
-
-earth = sphere(pos = vector(0, 0, 0), radius = 6371000, color = color.white, texture="https://i.imgur.com/KwPyMW1.jpg")
-cubesat = box(color = color.red, length=CUBE_SIZE, height=CUBE_SIZE, width=CUBE_SIZE, make_trail=True)
-pointer = arrow();
-
-#setting the angular velocity
-avX = 0.1#2 * math.pi
+#------ STARTING PARAMETERS ------
+# angular velocity
+avX = 0.0#2 * math.pi
 avY = 0
-avZ = 0.1
-angularVelocity = AngularVel([avX, avY, avZ])
+avZ = 0
+angularVelocity = AngularVel(np.array([avX, avY, avZ]))
 
 #attitude vectors
 u1 = -1
@@ -50,54 +29,49 @@ u3 = 0
 v1 = 0
 v2 = 0
 v3 = 1
-
 #creating the attitude
-attitude = Attitude(numpy.array([u1, u2, u3]) , numpy.array([v1, v2, v3]))
+attitude = Attitude(np.array([u1, u2, u3]) , np.array([v1, v2, v3]))
+position = Position(C.HEIGHT, C.INCLINATION)
+magnetorquersCurrent = np.array([0,0,0])
+animation = Animation()
 
+t = 0;
 
-#enable manual steering?
-
-while t < duration:
+while t < C.DURATION:
 	#switch on magnetorquers -> funktion einsetzen
 	rate(100)
-	#ask for three current -> input?
-	i1 = 0#float(input("Set current1"))
-	i2 = 1#float(input("Set current2"))
-	i3 = 0#float(input("Set current3"))
-	i = numpy.array([i1, i2, i3])
-	#getM
-	m = PHY.getDipolemoment(i, attitude)
 
-	#getB 
-	b = PHY.mFluxDensity(position.pos)
+	#-----SIMULATION: CALCULATE DATA------
+	
+	# global reference frame
+	B = PHY.mFluxDensity(position.pos)
 
-	#getTorque
-	to = PHY.getTorque(b, m)
+	# cubsat reference frame
+	
+	inducedVoltage = SENSORS.fakeMagnetometers(B, attitude)
+	gyroVoltage = SENSORS.fakeGyros(angularVelocity, attitude)
+	# TODO: fake other senors for ATTITUDE determination as well
 
-	#ausgeben
 
-	#increase t
-	t += (1 * dt)
+	#--------CALL CONTROL-SYSTEM--------
+	magnetorquersVoltage = CONTROL.react(inducedVoltage, gyroVoltage)
 
-	#calculate new position
+
+	#------- SIMULATION: CHANGE DATA---------
+	magnetorquersCurrent = SENSORS.fakeMagnetorquerts(magnetorquersVoltage, magnetorquersCurrent, C.DT)
+	m = PHY.getDipolemoment(magnetorquersVoltage, attitude)
+	torque = PHY.getTorque(B, m)
+	t += C.DT;
 	position.calcPosition(t)
-	print(str(position))
+	inertiaMatrix = 1 # TODO
+	angularVelocity.addTorque(torque, inertiaMatrix, C.DT)
+	attitude.newAttitude(angularVelocity.av, C.DT)
+	
 
-	#calculate new angular velocity (use)
-	I = 1
-	angularVelocity.addTorque(to, I, dt)
+	#------- ANIMATION: UPDATE-------
+	animation.update(position, attitude)
 
-	#calculate new attitude
-	print("angularVelocity", angularVelocity.av, dt)
-	attitude.newAttitude(angularVelocity.av, dt)
+
+	#-------DEBUG-PRINT-----------
+	print("angularVelocity", angularVelocity.av)
 	print("attitude: ", attitude.u)
-
-
-	cubesat.pos = numpToVec(position.pos)
-	cubesat.axis = numpToVec(attitude.u * CUBE_SIZE)
-	cubesat.up = numpToVec(attitude.v)
-	print("axis: " + str(cubesat.axis))
-	pointer.pos = numpToVec(position.pos)
-	pointer.axis = numpToVec(attitude.u * CUBE_SIZE * 1.5)
-
-

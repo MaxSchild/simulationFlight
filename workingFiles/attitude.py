@@ -9,11 +9,11 @@ class Attitude(object):
 		self.w = numpy.cross(u,v)
 
 	def newAttitude(self, av, dt):
-
-		self.u = self.rotateVec(av, self.u, dt)
-		self.v = self.rotateVec(av, self.v, dt)
-		self.w = numpy.cross(self.u, self.v)
-		#r is the vector from cubesat to earth
+		if (numpy.linalg.norm(av) > 0):
+			self.u = self.rotateVec(av, self.u, dt)
+			self.v = self.rotateVec(av, self.v, dt)
+			self.w = numpy.cross(self.u, self.v)
+			#r is the vector from cubesat to earth
 
 
 	def angleVectors(self, u, r):
