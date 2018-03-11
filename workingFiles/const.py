@@ -1,12 +1,16 @@
 import math
-
+import numpy as np
 #--------PARAMETERS-------------
 # all dimensions in m, time in s
+
+#Control system
+PROPORTIONAL_COEFF = 3;
 
 # CubeSat:
 CUBE_SIZE = 1
 CUBE_VISUAL_SIZE = 1000000
-
+MOMENT_INERTIA = np.array([ [1.0/600, 0, 0], [ 0, 1.0/600, 0], [0, 0, 1.0/600]]); 
+	
 MU = 0.006 # depends on core material
 # Magnetorquers
 COIL_WHORLS = 500
@@ -17,6 +21,10 @@ COIL_INDUCTANCE = COIL_CROSSAREA * COIL_WHORLS**2 * MU / COIL_LENGTH
 
 # Constants:
 EARTH_RADIUS = 6371000
+DIPOLE_EARTH = np.array([0, 0, 7.94e22])
+EARTH_MASS = 5.972e24;
+GAMMA = 6.674e-11;
+MU_0 = math.pi*4e-7;
 
 # Orbit:
 HEIGHT = 400000 					# 400km
@@ -24,4 +32,4 @@ INCLINATION = 0.5 * math.pi / 2		# 45°
 
 # Simulation
 DT = 1 								# smallest time step [1s]
-DURATION = 10000 					# 5500s ~= 1 orbit
+DURATION = 2000 					# 5500s ~= 1 orbit
