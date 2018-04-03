@@ -3,25 +3,46 @@ from numpy import *
 from numpy.linalg import *
 import numpy as np
 import const as C
+import matplotlib.pyplot as plt
 
+plotBdot = [[],[],[],[]]
 
-def getEstimatedDipoleMomentum(B, targetTorque, J):
+lastB = np.array([0, 0, 0])
+
+def detumbleMM(B):
+
+    #print("lastB: ", lastB)
+
+    Bdot = B - lastB
+    if norm(lastB) == 0 or norm(Bdot) == 0:
+        return np.array([0,0,0])
+    
+    #print("B: ", B, " Bdot: ", Bdot)
+    plotBdot[0].append(Bdot[0])
+    plotBdot[1].append(Bdot[1])
+    plotBdot[2].append(Bdot[2])
+
+    torque = - cross(Bdot, B) / norm(Bdot) / norm(B)
+    mm = cross(B, torque) / norm(B) * (norm(Bdot)**1) * C.PROPORTIONAL_COEFF
+    return mm
+    ''' last try:
+    #tries to remove controllable component of angularVel
+    rotB = B * (dot(angularVel, B) / (norm(B)**2)) #rotVel projected onto B
+    rotNotB = angularVel - rotB #other part of the angularVel, normal to rotB
+    if(norm(rotNotB) > 0):
+        print("rel rotB/rotNotB: ", norm(rotB)/norm(rotNotB))
+        #print("rotNotB: ", rotNotB)
+        plotRotNotB[0].append(rotNotB[0])
+        plotRotNotB[1].append(rotNotB[1])
+        plotRotNotB[2].append(rotNotB[2])
+        t_target = -rotNotB / norm(rotNotB) # torque opposite to current rotation
+        #mRequiredRel = cross(B, t_target) / (norm(B)**2) * (norm(rotNotB)**1) * C.PROPORTIONAL_COEFF
+        mRequiredRel = cross(B, t_target) / (norm(B)) * (norm(rotNotB)**1) * C.PROPORTIONAL_COEFF
+        #print("t_target: ", t_target)
+        return mRequiredRel
+
+    return np.array([0,0,0])
     '''
-    B: magnetic flux density 
-    targetTorque: axis and amount of torque desired
-    J: moment of inertia
-
-    anglPerc: 1.0 -> B and targetTorque are parallel
-             0.0 -> B and targetTorque are perpendicular
-    '''
-    anglPerc = abs(math.acos(1.0*dot(B, targetTorque)/norm(B) / norm(targetTorque))-0.5*math.pi)/(0.5*math.pi)
-    A = np.matmul(J, targetTorque) * norm(targetTorque)**0.5 * 0.04 * (1.01 - anglPerc)**1.3
-    if (norm(cross(B, A)) != 0):
-        m = ( cross(B, A) / norm(np.cross(B, A)) ) * norm(A) / norm(B)  * C.PROPORTIONAL_COEFF
-    else:
-        m = np.array([0,0,0])
-
-    return m
 
 def solenoidNeededCurrent(m):
 #   m: magnitude of dipole momentum
@@ -39,6 +60,7 @@ def angVByVoltage(V):
     return V * 100
 
 def react(mmV, gyroV):
+    global lastB
     # mmV: voltages from magnetometers
     # gyroV: voltages from gyros
     # return: magneTORQUERS voltage (array)
@@ -48,12 +70,16 @@ def react(mmV, gyroV):
     B = fluxDensityByVoltage(mmV)
     angV = angVByVoltage(gyroV)
 
-    targetMM = getEstimatedDipoleMomentum(B, -angV, C.MOMENT_INERTIA)
+
+
+    targetMM = detumbleMM(B)
     targetCurrent = solenoidNeededCurrent(targetMM)
     targetVoltage = getVoltageByTargetCurrent(targetCurrent)
 
+    lastB = B
+    #print("targetMM:", targetMM)
 
-    if (norm(targetVoltage) > 5):
-        targetVoltage = targetVoltage / norm(targetVoltage) * 5
+    #if (norm(targetVoltage) > 5):
+    #    targetVoltage = targetVoltage / norm(targetVoltage) * 5
 
     return targetVoltage

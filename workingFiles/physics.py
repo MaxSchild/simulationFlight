@@ -1,8 +1,8 @@
 import math
 import numpy
+from numpy import *
 import const as C
 from attitude import Attitude
-mu_0 = 4 * math.pi * 10e-7
 
 def getTorque(B, m):
 	t = numpy.cross(m, B)
@@ -28,11 +28,5 @@ def mFluxDensity(r):
 	m = C.DIPOLE_EARTH
 	# Get the magnetic flux density in distance r to dipole m
 	r_length = numpy.linalg.norm(r)
-	dotPr = numpy.dot(r, m)
-
-	B1 = mu_0 / (4 * math.pi) * ( 3 * r[0] * dotPr / r_length**5 - m[0] / r_length**3 )
-	B2 = mu_0 / (4 * math.pi) * ( 3 * r[1] * dotPr / r_length**5 - m[1] / r_length**3 )
-	B3 = mu_0 / (4 * math.pi) * ( 3 * r[2] * dotPr / r_length**5 - m[2] / r_length**3 )
-	B = numpy.array([B1, B2, B3])
-
+	B = C.MU_0 / (4*math.pi) * ((3*r*dot(r,m)) / (r_length**5) - m / (r_length**3))
 	return B

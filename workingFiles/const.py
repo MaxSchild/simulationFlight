@@ -4,7 +4,7 @@ import numpy as np
 # all dimensions in m, time in s
 
 #Control system
-PROPORTIONAL_COEFF = 3;
+PROPORTIONAL_COEFF = 1e5;
 
 # CubeSat:
 CUBE_SIZE = 1
@@ -13,7 +13,7 @@ MOMENT_INERTIA = np.array([ [1.0/600, 0, 0], [ 0, 1.0/600, 0], [0, 0, 1.0/600]])
 	
 MU = 0.006 # depends on core material
 # Magnetorquers
-COIL_WHORLS = 500
+COIL_WHORLS = 1000
 COIL_LENGTH = 0.05 # 5cm
 COIL_CROSSAREA = 0.000001 # 1cm x 1cm
 COIL_RESISTANCE = 30
@@ -28,8 +28,11 @@ MU_0 = math.pi*4e-7;
 
 # Orbit:
 HEIGHT = 400000 					# 400km
-INCLINATION = 0.5 * math.pi / 2		# 45°
+INCLINATION = 0.3 * math.pi / 2		# 
 
 # Simulation
-DT = 1 								# smallest time step [1s]
-DURATION = 2000 					# 5500s ~= 1 orbit
+DT = 0.5	 							# smallest time step [1s]
+DURATION = 5000						# 5500s ~= 1 orbit
+
+PLOT = False
+ANIMATE = False
