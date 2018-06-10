@@ -22,6 +22,7 @@ class Position(object):
 		return "pX: " + str(self.pos[0]) + "   " + "pY: " + str(self.pos[1]) + "   " + "pZ: " + str(self.pos[2])
 
 	def calcPosition(self, t):
+		#t = 0 # TODO!!!!! rm
 		r = math.cos(1.0 * self.omega * t) 
 		s = math.sin(1.0 * self.omega * t)
 		self.pos = r * self.l + s * self.d

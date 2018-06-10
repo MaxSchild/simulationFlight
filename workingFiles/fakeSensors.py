@@ -20,6 +20,7 @@ def fakeMagnetometers(B, attitude):
 	return toCSRF(B, attitude) * 0.01;
 	
 def fakeGyros(angularVelocity, attitude):
+	#TODO: reference frames? Maybe not transform
 	return toCSRF(angularVelocity.av, attitude) * 0.01;
 
 def fakeMagnetorquerts(mtV, mtC, dt):

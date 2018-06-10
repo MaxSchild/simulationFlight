@@ -18,9 +18,9 @@ if C.ANIMATE:
 
 #------ STARTING PARAMETERS ------
 # angular velocity
-avX = 1#2 * math.pi
-avY = 0.0
-avZ = 0
+avX = 0.1#2 * math.pi
+avY = 0
+avZ = 0.1
 angularVelocity = AngularVel(np.array([avX, avY, avZ]))
 
 #attitude vectors
@@ -54,16 +54,17 @@ while t < C.DURATION:
 	
 	# global reference frame
 	B = PHY.mFluxDensity(position.pos)
-
 	# cubsat reference frame
 	
-	inducedVoltage = SENSORS.fakeMagnetometers(B, attitude)
+	magnetometerVoltage = SENSORS.fakeMagnetometers(B, attitude)
 	gyroVoltage = SENSORS.fakeGyros(angularVelocity, attitude)
 	# TODO: fake other senors for ATTITUDE determination as well
 
 
 	#--------CALL CONTROL-SYSTEM--------
-	magnetorquersVoltage = CONTROL.react(inducedVoltage, gyroVoltage)
+	magnetorquersVoltage = CONTROL.react(magnetometerVoltage, gyroVoltage)
+	if CONTROL.controlCounter == 1:
+		print("controlling: ", t)
 
 	#------- SIMULATION: CHANGE DATA---------
 	magnetorquersCurrent = SENSORS.fakeMagnetorquerts(magnetorquersVoltage, magnetorquersCurrent, C.DT)
@@ -81,7 +82,7 @@ while t < C.DURATION:
 
 	
 	#-------DEBUG-PRINT-----------
-	if True or t % 1 == 0 and t >= 0:
+	if True or int(t) % 1 == 0 and t >= 0:
 		#print("m*B", np.dot(m,B))
 		#print("angularVelocity", np.linalg.norm(angularVelocity.av))
 		#print("magnetorquersCurrent: ", magnetorquersCurrent)
@@ -97,9 +98,9 @@ while t < C.DURATION:
 		plotAngV[2].append(abs(SENSORS.toCSRF(angularVelocity.av, attitude)[1]))
 		plotAngV[3].append(abs(SENSORS.toCSRF(angularVelocity.av, attitude)[2]))
 		'''
-		plotAngV[1].append(max(1e-7, abs(angularVelocity.av[0])))
-		plotAngV[2].append(max(1e-7, abs(angularVelocity.av[1])))
-		plotAngV[3].append(max(1e-7, abs(angularVelocity.av[2])))
+		plotAngV[1].append(angularVelocity.av[0])
+		plotAngV[2].append(angularVelocity.av[1])
+		plotAngV[3].append(angularVelocity.av[2])
 		if C.PLOT and t % 50 == 0:
 			#plotAngV[0][round(t/50)] = angularVelocity.av[0]
 			plt.clf()
@@ -118,21 +119,23 @@ while t < C.DURATION:
 			plt.pause(0.01)
 
 	t += C.DT;
-#'''
-PLT = plt.figure()
-ax1 = PLT.add_subplot(211)
-magnitude, 	= ax1.semilogy(plotTime, plotAngV[0], label = 'magnitude')
-xAxis, 		= ax1.semilogy(plotTime, plotAngV[1], label = 'x-Axis')
-yAxis, 		= ax1.semilogy(plotTime, plotAngV[2], label = 'y-Axis')
-zAxis, 		= ax1.semilogy(plotTime, plotAngV[3], label = 'z-Axis')
-plt.legend(handles=[magnitude, xAxis, yAxis, zAxis],loc='upper right')
-#'''
-ax2 = PLT.add_subplot(212)
-xAxis2, 	= ax2.plot(CONTROL.plotBdot[0], label = 'x-Axis')
-yAxis2, 	= ax2.plot(CONTROL.plotBdot[1], label = 'y-Axis')
-zAxis2, 	= ax2.plot(CONTROL.plotBdot[2], label = 'z-Axis')
-ax2.legend(handles=[xAxis2, yAxis2, zAxis2],loc='upper right')
 
-plt.show()
+if not C.ANIMATE:
+	#'''
+	PLT = plt.figure()
+	ax1 = PLT.add_subplot(211)
+	magnitude, 	= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[0]], label = 'magnitude')
+	xAxis, 		= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[1]], label = 'x-Axis')
+	yAxis, 		= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[2]], label = 'y-Axis')
+	zAxis, 		= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[3]], label = 'z-Axis')
+	plt.legend(handles=[magnitude, xAxis, yAxis, zAxis],loc='upper right')
 	
+	ax2 = PLT.add_subplot(212)
+	xAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[1]], label = 'x-Axis')
+	yAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[2]], label = 'y-Axis')
+	zAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[3]], label = 'z-Axis')
+	ax2.legend(handles=[xAxis2, yAxis2, zAxis2],loc='upper right')
+
+	plt.show()
+
 

@@ -9,22 +9,70 @@ plotBdot = [[],[],[],[]]
 
 lastB = np.array([0, 0, 0])
 
-def detumbleMM(B):
+controlCounter = 0
+angleFactor = 2.0
 
-    #print("lastB: ", lastB)
+def f(i):
+    return "{:10.4f}".format(i)
 
-    Bdot = B - lastB
+def printV(name,V):
+    #V = V / norm(V)
+    #print(name + " = Vector((0, 0, 0), (" + f(V[0]) +", "+ f(V[1]) + ", " + f(V[2]) + "))")
+    print(name + " (" + str(V[0]) +", "+ str(V[1]) + ", " + str(V[2]) + "))")
+
+def detumbleMM(B, R):
+    '''
+    B:      Magnetic field vector
+    R:      Rotation vector
+    return: targert magnetic moment
+    '''
+    
+    #component of R parallel to B
+    R_parallel = dot(B, R) / norm(B) * (B /norm(B))
+    #component of R perpendicular to B
+    R_orth = R - R_parallel
+
+    #only act if angle > 45 deg
+    global controlCounter, angleFactor
+    if (controlCounter > 0) or (norm(R_orth) >= angleFactor * norm(R_parallel)):
+        torqueAxis = -R_orth/norm(R_orth)
+        mm = cross(B, torqueAxis) / norm(B) * (norm(R_orth)**1) * C.PROPORTIONAL_COEFF
+        if controlCounter <= 0:
+            controlCounter = 10 #control time in seconds
+        else:
+            controlCounter -= C.DT
+        angleFactor = C.ANGLE_FACTOR
+    else:
+        mm = np.array([0,0,0])
+        angleFactor *= 0.999**C.DT
+    '''
+    printV("B", B)
+    printV("Bdot", Bdot)
+
+    printV("T", torque) 
+    printV("mm", mm)
+    print()
+
+    #exit()
+    '''
+    return mm
+
+
+    ''' last try: B-DOT CONTROL
+    Bdot = (B - lastB) / C.DT
     if norm(lastB) == 0 or norm(Bdot) == 0:
         return np.array([0,0,0])
     
-    #print("B: ", B, " Bdot: ", Bdot)
     plotBdot[0].append(Bdot[0])
     plotBdot[1].append(Bdot[1])
     plotBdot[2].append(Bdot[2])
-
-    torque = - cross(Bdot, B) / norm(Bdot) / norm(B)
+    # B-Field rotates in invers direction compared to CubeSat rotatio
+    torque = - cross(Bdot, B) / norm(Bdot) / norm(B) #invers dir to rot vector
     mm = cross(B, torque) / norm(B) * (norm(Bdot)**1) * C.PROPORTIONAL_COEFF
-    return mm
+
+    '''
+
+
     ''' last try:
     #tries to remove controllable component of angularVel
     rotB = B * (dot(angularVel, B) / (norm(B)**2)) #rotVel projected onto B
@@ -72,14 +120,15 @@ def react(mmV, gyroV):
 
 
 
-    targetMM = detumbleMM(B)
+    targetMM = detumbleMM(B, angV)
     targetCurrent = solenoidNeededCurrent(targetMM)
     targetVoltage = getVoltageByTargetCurrent(targetCurrent)
 
     lastB = B
     #print("targetMM:", targetMM)
 
-    #if (norm(targetVoltage) > 5):
-    #    targetVoltage = targetVoltage / norm(targetVoltage) * 5
-
+    if (norm(targetVoltage) > 5):
+        targetVoltage = targetVoltage / norm(targetVoltage) * 5
+        #print("max voltage")
+    #return np.array([0,0,0])
     return targetVoltage
