@@ -4,8 +4,10 @@ import numpy as np
 # all dimensions in m, time in s
 
 #Control system
-PROPORTIONAL_COEFF = 1e1;#[1e-1; 1e2]
+PROPORTIONAL_COEFF = 1e2;#[1e-1; 1e2]
 ANGLE_FACTOR = 2.0
+
+DETUMBLE = False
 
 # CubeSat:
 CUBE_SIZE = 1
@@ -32,8 +34,8 @@ HEIGHT = 400000 					# 400km
 INCLINATION = 0.5 * math.pi / 2		# 
 
 # Simulation
-DT = 0.5	 							# smallest time step [1s]
-DURATION = 15000						# 5500s ~= 1 orbit
+DT = 0.125	 							# smallest time step [1s]
+DURATION = 200						# 5500s ~= 1 orbit
 
 PLOT = False
-ANIMATE = False
+ANIMATE = True

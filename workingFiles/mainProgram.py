@@ -15,12 +15,11 @@ if C.ANIMATE:
 	from vpython import *
 
 
-
 #------ STARTING PARAMETERS ------
 # angular velocity
-avX = 0.1#2 * math.pi
+avX = 0.0#2 * math.pi
 avY = 0
-avZ = 0.1
+avZ = 0
 angularVelocity = AngularVel(np.array([avX, avY, avZ]))
 
 #attitude vectors
@@ -38,12 +37,15 @@ magnetorquersCurrent = np.array([0,0,0])
 
 if C.ANIMATE:
 	animation = Animation()
+	time.sleep(2)
 
 t = 0
 position.calcPosition(t)
 plotTime = []
 plotAngV = [[],[],[],[]]
 plotV = [[],[],[],[]]
+
+
 
 while t < C.DURATION:
 	#switch on magnetorquers -> funktion einsetzen
@@ -58,18 +60,19 @@ while t < C.DURATION:
 	
 	magnetometerVoltage = SENSORS.fakeMagnetometers(B, attitude)
 	gyroVoltage = SENSORS.fakeGyros(angularVelocity, attitude)
-	# TODO: fake other senors for ATTITUDE determination as well
+	vectorToEarth = SENSORS.fakeAttitude(position.pos, attitude)
 
 
 	#--------CALL CONTROL-SYSTEM--------
-	magnetorquersVoltage = CONTROL.react(magnetometerVoltage, gyroVoltage)
-	if CONTROL.controlCounter == 1:
-		print("controlling: ", t)
+	magnetorquersVoltage = CONTROL.react(magnetometerVoltage, gyroVoltage, vectorToEarth)
+	#if CONTROL.controlCounter == 1:
+	#	print("controlling: ", t)
 
 	#------- SIMULATION: CHANGE DATA---------
 	magnetorquersCurrent = SENSORS.fakeMagnetorquerts(magnetorquersVoltage, magnetorquersCurrent, C.DT)
 	m = PHY.getDipolemoment(magnetorquersCurrent, attitude)
 	torque = PHY.getTorque(B, m)
+	#print("torque: ", torque)
 	#print("realtorque:", SENSORS.toCSRF(torque/np.linalg.norm(torque),attitude))
 	position.calcPosition(t)
 	angularVelocity.addTorque(torque, C.MOMENT_INERTIA, C.DT)
@@ -129,11 +132,11 @@ if not C.ANIMATE:
 	yAxis, 		= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[2]], label = 'y-Axis')
 	zAxis, 		= ax1.semilogy(plotTime, [max(1e-8, abs(x)) for x in plotAngV[3]], label = 'z-Axis')
 	plt.legend(handles=[magnitude, xAxis, yAxis, zAxis],loc='upper right')
-	
+
 	ax2 = PLT.add_subplot(212)
-	xAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[1]], label = 'x-Axis')
-	yAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[2]], label = 'y-Axis')
-	zAxis2, 	= ax2.plot(plotTime, [np.sign(x) for x in plotAngV[3]], label = 'z-Axis')
+	xAxis2, 	= ax2.plot(plotTime, [x for x in plotAngV[1]], label = 'x-Axis')
+	yAxis2, 	= ax2.plot(plotTime, [x for x in plotAngV[2]], label = 'y-Axis')
+	zAxis2, 	= ax2.plot(plotTime, [x for x in plotAngV[3]], label = 'z-Axis')
 	ax2.legend(handles=[xAxis2, yAxis2, zAxis2],loc='upper right')
 
 	plt.show()

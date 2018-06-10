@@ -24,5 +24,9 @@ def fakeGyros(angularVelocity, attitude):
 	return toCSRF(angularVelocity.av, attitude) * 0.01;
 
 def fakeMagnetorquerts(mtV, mtC, dt):
-	#return mtV / C.COIL_RESISTANCE - (mtV / C.COIL_RESISTANCE - mtC) * math.exp( - dt * C.COIL_RESISTANCE / C.COIL_INDUCTANCE);
-	return mtV / C.COIL_RESISTANCE
+	return mtV / C.COIL_RESISTANCE - (mtV / C.COIL_RESISTANCE - mtC) * math.exp( - dt * C.COIL_RESISTANCE / C.COIL_INDUCTANCE);
+	#return mtV / C.COIL_RESISTANCE
+
+def fakeAttitude(location, attitude):
+	v = toCSRF(-location, attitude)
+	return v / np.linalg.norm(v)

@@ -5,7 +5,7 @@ import numpy as np
 import const as C
 import matplotlib.pyplot as plt
 
-plotBdot = [[],[],[],[]]
+plotAngle = []
 
 lastB = np.array([0, 0, 0])
 
@@ -92,6 +92,34 @@ def detumbleMM(B, R):
     return np.array([0,0,0])
     '''
 
+def active(B, R, V):
+    '''
+    B:      Magnetic field vector
+    R:      Rotation vector
+    V:      Vector pointing to Earth
+    return: targert magnetic moment
+    '''
+    xAxis = np.array([1.0,0.0,0.0])
+
+    #STEP 1: align with B-Vector
+    angle = math.acos(dot(xAxis, B) / norm(B))
+    #goalVelo = cross(xAxis, B) / norm(B) * log1p(angle) * 0.5
+    goalVelo = cross(xAxis, B) / norm(B) * exp(angle) * 0.1
+    # R + torque = goalVelo
+    torque = goalVelo - R
+    mm = cross(B, torque) / norm(B)/norm(torque) * (norm(torque)**1) * C.PROPORTIONAL_COEFF
+
+
+    if (angle < 3.0/360 * pi * 2) and (norm(R) < 1e-2):
+        print("aligned")
+        #exit()
+    print("angle: ", math.degrees(angle), "goalV: ", norm(goalVelo), "R:" , norm(R))
+    plotAngle.append(angle)
+
+
+    return mm
+
+
 def solenoidNeededCurrent(m):
 #   m: magnitude of dipole momentum
     return m * C.MU_0 / (C.MU * C.COIL_WHORLS * C.COIL_CROSSAREA)
@@ -107,20 +135,28 @@ def fluxDensityByVoltage(V):
 def angVByVoltage(V):
     return V * 100
 
-def react(mmV, gyroV):
+def react(mmV, gyroV, toEarth):
     global lastB
     # mmV: voltages from magnetometers
     # gyroV: voltages from gyros
+    # toEarth: normalized vector to earth in Cube reference frame
     # return: magneTORQUERS voltage (array)
-    if (not (norm(mmV) > 0 and norm(gyroV) > 0)):
-        return np.array([0,0,0])
 
     B = fluxDensityByVoltage(mmV)
     angV = angVByVoltage(gyroV)
 
+    #TODO controlsystem must deceide on its own if detumbling is active
+    if C.DETUMBLE:
+        if (not (norm(mmV) > 0 and norm(gyroV) > 0)):
+            return np.array([0,0,0])
+        targetMM = detumbleMM(B, angV)
+    else:
+        # goal: 1. align (1,0,0) to B
+        #       2. align (1,0,0) to toEarth
+        if (not (norm(mmV) > 0 and norm(toEarth) > 0)):
+            return np.array([0,0,0])
+        targetMM = active(B, angV, toEarth)
 
-
-    targetMM = detumbleMM(B, angV)
     targetCurrent = solenoidNeededCurrent(targetMM)
     targetVoltage = getVoltageByTargetCurrent(targetCurrent)
 
