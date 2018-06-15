@@ -11,7 +11,7 @@ DETUMBLE = False
 
 # CubeSat:
 CUBE_SIZE = 1
-CUBE_VISUAL_SIZE = 1000000
+CUBE_VISUAL_SIZE = 200000
 MOMENT_INERTIA = np.array([ [1.0/600, 0, 0], [ 0, 1.0/600, 0], [0, 0, 1.0/600]]); 
 	
 MU = 0.006 # depends on core material
@@ -34,8 +34,8 @@ HEIGHT = 400000 					# 400km
 INCLINATION = 0.5 * math.pi / 2		# 
 
 # Simulation
-DT = 0.125	 							# smallest time step [1s]
-DURATION = 200						# 5500s ~= 1 orbit
+DT = 0.25	 							# smallest time step [1s]
+DURATION = 5000						# 5500s ~= 1 orbit
 
-PLOT = False
+PLOT = True
 ANIMATE = True

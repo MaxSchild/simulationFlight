@@ -17,6 +17,7 @@ class Animation(object):
 		self.earth = sphere(pos = vector(0, 0, 0), radius = C.EARTH_RADIUS, color = color.white, texture="https://i.imgur.com/KwPyMW1.jpg")
 		self.cubesat = box(color = color.red, length=C.CUBE_VISUAL_SIZE, height=C.CUBE_VISUAL_SIZE, width=C.CUBE_VISUAL_SIZE, make_trail=True)
 		self.pointer = arrow();
+		self.scene2.camera.follow(self.cubesat)
 
 	def update(self, position, attitude):
 		self.cubesat.pos = numpToVec(position.pos)
